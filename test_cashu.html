@@ -11,6 +11,13 @@
 <body>
 
   <div x-data="wallet">
+    <input readonly @click="$el.select()" x-model="quote.request">
+    <pre x-text="JSON.stringify(quote, null, 2)"></pre>
+    <button @click="updateQuote">update quote</button>
+
+    <pre x-text="JSON.stringify(proofs, null, 2)"></pre>
+    <button @click="mint">mint</button>
+
     <pre x-text="JSON.stringify(info, null, 2)"></pre>
     <button @click="updateInfo">update info</button>
   </div>
@@ -25,26 +32,31 @@
       const mint = new CashuMint(mintUrl);
       Alpine.data('wallet', () => ({
         wallet: null,
-        info: null,
-        quote: null,
+        info: {},
+        quote: {},
+        proofs: [],
 
         async init() {
           this.wallet = new CashuWallet(mint, { unit: 'sat' });
 
           // await this.updateQuote();
-          await this.updateInfo();
+          // await this.updateInfo();
         },
 
         async updateQuote() {
-          this.quote = await this.mint.getQuote();
+          this.quote = await this.wallet.createMintQuote(64);
         },
 
         async updateInfo() {
           this.info = await this.wallet.getMintInfo();
         },
 
-        mint() {
-
+        async mint() {
+          const mintQuoteChecked = await wallet.checkMintQuote(mintQuote.quote);
+          if (mintQuoteChecked.state == MintQuoteState.PAID) {
+            const { proofs } = await this.wallet.mintTokens(64, mintQuote.quote);
+            this.proofs = proofs;
+          }
         }
       }));
     }
