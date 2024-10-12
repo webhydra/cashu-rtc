@@ -12,38 +12,45 @@
 
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
-    import { Relay, finalizeEvent, generateSecretKey, getPublicKey } from "https://esm.sh/nostr-tools@2.8.0";
+    import { generateSecretKey, getPublicKey } from "https://esm.sh/nostr-tools@2.8.0";
+    import { createSignalClient } from './relay.js';
 
     const peerAsec = generateSecretKey();
     const peerApub = getPublicKey(peerAsec);
-
     const peerBsec = generateSecretKey();
-    const peerBpub = getPublicKey(peerBsec);
 
-    const relayA = await Relay.connect('ws://localhost:1234');
-    const relayB = await Relay.connect('ws://localhost:1234');
+    const signalA = await createSignalClient('ws://localhost:1234', peerAsec);
+    const signalB = await createSignalClient('ws://localhost:1234', peerBsec);
 
-    const subA = relayA.subscribe(
-      [{ '#p': [peerApub], kinds: [23456] }],
-      {
-        onevent(event) {
-          console.log("we got the event we wanted:", event);
-        },
-        oneose() {
-          subA.close();
-        },
+    let first = true;
+    signalA.getReader().pipeTo(new WritableStream({
+      write(event) {
+        console.log('signal A received', event);
+        if (first) {
+          first = false;
+          new ReadableStream({
+            start(controller) {
+              console.log('send from peer A to', signalA.getRemotePubkey());
+              controller.enqueue({ hello: 'universe!' });
+            }
+          }).pipeTo(signalA.getWriter())
+        }
       }
-    );
+    }));
 
-    const event = finalizeEvent({
-      kind: 23456,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [['p', peerApub]],
-      content: 'hello',
-    }, peerBsec);
+    signalB.setRemotePubkey(peerApub);
+    signalB.getReader().pipeTo(new WritableStream({
+      write(event) {
+        console.log('signal B received', event);
+      }
+    }));
 
-    await relayB.publish(event);
-    relayB.close();
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue({ hello: 'world' });
+      }
+    }).pipeTo(signalB.getWriter())
+
 
     globalThis.addEventListener('alpine:init', () => {
       // TODO: get started!
