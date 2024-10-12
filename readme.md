@@ -4,6 +4,7 @@ Interactive cashu shop.
 
 # ToDo
 
+- [x] setup local lightning nodes + mint
 - [ ] Get used to cashu library
 - [ ] Find a nostr relay I can use to move around some ephemeral events
 - [ ] Create nostr relay connection for signaling RTC connection states

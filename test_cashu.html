@@ -1,15 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cashu test</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-  
+
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
+    import { CashuMint, CashuWallet, MintQuoteState } from 'https://esm.sh/@cashu/cashu-ts@1.1.0';
+
+    const mintUrl = 'http://localhost:3338'; // the mint URL
+    const mint = new CashuMint(mintUrl);
+    const wallet = new CashuWallet(mint);
+    const mintQuote = await wallet.createMintQuote(64);
+
+    console.log('mintQuote', mintQuote);
+
+    // pay the invoice here before you continue...
+    const mintQuoteChecked = await wallet.checkMintQuote(mintQuote.quote);
+
+    console.log('mintQuoteChecked', mintQuoteChecked);
+
+    if (mintQuoteChecked.state == MintQuoteState.PAID) {
+      const { proofs } = await wallet.mintTokens(64, mintQuote.quote);
+
+      console.log('proofs', proofs);
+    }
 
     globalThis.addEventListener('alpine:init', () => {
       // TODO: get started!
@@ -19,4 +40,5 @@
     Alpine.start();
   </script>
 </body>
+
 </html>
