@@ -6,7 +6,12 @@ Interactive cashu shop.
 
 - [x] Find a nostr relay I can use to move around some ephemeral events
 - [x] setup local lightning nodes + mint
-- [ ] Get used to cashu library
+- [x] Get used to cashu library
+- [x] Add cashu functionality
+  - [x] Create encoded token
+  - [x] Send encoded tokens
+  - [x] Save received tokens
+  - [x] Save save balance
 - [ ] Create nostr relay connection for signaling RTC connection states
 - [ ] Make a test HTML for streaming connection
 - [ ] Make a test HTML for cashu behavior
