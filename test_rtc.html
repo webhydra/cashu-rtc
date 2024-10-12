@@ -10,12 +10,36 @@
 
 <body>
 
+  <div x-data="messengerA">
+    <label>
+      Peer A send<br>
+      <input x-model="message">
+      <button @click="send">send</button>
+    </label>
+
+    <br>
+
+    <pre x-text="messages.join('\n')"></pre>
+  </div>
+
+  <div x-data="messengerB">
+    <label>
+      Peer B send<br>
+      <input x-model="message">
+      <button @click="send">send</button>
+    </label>
+
+    <br>
+
+    <pre x-text="messages.join('\n')"></pre>
+  </div>
+
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
     import { generateSecretKey, getPublicKey } from "https://esm.sh/nostr-tools@2.8.0";
     import createPeer from './external/peer.js';
     import createSignalClient from './relay.js';
-    import { createConnection } from './pipes.js';
+    import { createConnection, createMessageChannel } from './pipes.js';
 
     const peerAsec = generateSecretKey();
     const peerApub = getPublicKey(peerAsec);
@@ -44,8 +68,40 @@
     }));
 
     globalThis.addEventListener('alpine:init', () => {
-      // TODO: get started!
       console.log('alpine init');
+      Alpine.data('messengerA', () => ({
+        message: '',
+        messages: [],
+        _send: () => null,
+
+        init() {
+          const { send, listen } = createMessageChannel(peerA);
+          listen((message) => this.messages.push(message));
+          this._send = send;
+        },
+
+        send() {
+          this._send(this.message);
+          this.message = '';
+        }
+      }));
+
+      Alpine.data('messengerB', () => ({
+        message: '',
+        messages: [],
+        _send: () => null,
+
+        init() {
+          const { send, listen } = createMessageChannel(peerB);
+          listen((message) => this.messages.push(message));
+          this._send = send;
+        },
+
+        send() {
+          this._send(this.message);
+          this.message = '';
+        }
+      }));
     });
 
     Alpine.start();

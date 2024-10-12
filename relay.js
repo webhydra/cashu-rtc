@@ -37,7 +37,6 @@ export default async function createSignalClient(url, secretKey) {
     getWriter() {
       return new WritableStream({
         async write(chunk) {
-          console.log(chunk);
           const event = finalizeEvent(
             {
               kind: 23456,
