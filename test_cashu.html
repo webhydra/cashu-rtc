@@ -10,31 +10,50 @@
 
 <body>
 
+  <div x-data="wallet">
+    <pre x-text="JSON.stringify(info, null, 2)"></pre>
+    <button @click="updateInfo">update info</button>
+  </div>
+
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
     import { CashuMint, CashuWallet, MintQuoteState } from 'https://esm.sh/@cashu/cashu-ts@1.1.0';
 
-    const mintUrl = 'http://localhost:3338'; // the mint URL
-    const mint = new CashuMint(mintUrl);
-    const wallet = new CashuWallet(mint);
-    const mintQuote = await wallet.createMintQuote(64);
 
-    console.log('mintQuote', mintQuote);
+    function createWallet() {
+      const mintUrl = 'http://localhost:3338';
+      const mint = new CashuMint(mintUrl);
+      Alpine.data('wallet', () => ({
+        wallet: null,
+        info: null,
+        quote: null,
 
-    // pay the invoice here before you continue...
-    const mintQuoteChecked = await wallet.checkMintQuote(mintQuote.quote);
+        async init() {
+          this.wallet = new CashuWallet(mint, { unit: 'sat' });
 
-    console.log('mintQuoteChecked', mintQuoteChecked);
+          // await this.updateQuote();
+          await this.updateInfo();
+        },
 
-    if (mintQuoteChecked.state == MintQuoteState.PAID) {
-      const { proofs } = await wallet.mintTokens(64, mintQuote.quote);
+        async updateQuote() {
+          this.quote = await this.mint.getQuote();
+        },
 
-      console.log('proofs', proofs);
+        async updateInfo() {
+          this.info = await this.wallet.getMintInfo();
+        },
+
+        mint() {
+
+        }
+      }));
     }
 
     globalThis.addEventListener('alpine:init', () => {
       // TODO: get started!
       console.log('alpine init');
+
+      createWallet();
     });
 
     Alpine.start();
