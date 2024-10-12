@@ -12,6 +12,8 @@ Interactive cashu shop.
   - [x] Send encoded tokens
   - [x] Save received tokens
   - [x] Save save balance
+- [ ] Nostr + WebRTC
+  - [ ] Sending nostr pubkey is a much better idea...
 - [ ] Create nostr relay connection for signaling RTC connection states
 - [ ] Make a test HTML for streaming connection
 - [ ] Make a test HTML for cashu behavior

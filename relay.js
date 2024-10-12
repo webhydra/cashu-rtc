@@ -4,7 +4,7 @@ import {
   finalizeEvent,
 } from "https://esm.sh/nostr-tools@2.8.0";
 
-export async function createSignalClient(url, secretKey) {
+export default async function createSignalClient(url, secretKey) {
   let pubkey, remotePubkey;
   const relay = await Relay.connect(url);
   const handleEvents = function (controller) {
@@ -12,7 +12,7 @@ export async function createSignalClient(url, secretKey) {
       onevent(event) {
         event.content = JSON.parse(event.content);
         if (!remotePubkey) remotePubkey = event.pubkey;
-        controller.enqueue(event);
+        controller.enqueue(event.content);
       },
     });
   };
@@ -37,6 +37,7 @@ export async function createSignalClient(url, secretKey) {
     getWriter() {
       return new WritableStream({
         async write(chunk) {
+          console.log(chunk);
           const event = finalizeEvent(
             {
               kind: 23456,

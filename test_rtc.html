@@ -13,44 +13,35 @@
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
     import { generateSecretKey, getPublicKey } from "https://esm.sh/nostr-tools@2.8.0";
+    import createPeer from './external/peer.js';
     import createSignalClient from './relay.js';
+    import { createConnection } from './pipes.js';
 
     const peerAsec = generateSecretKey();
     const peerApub = getPublicKey(peerAsec);
     const peerBsec = generateSecretKey();
 
     const signalA = await createSignalClient('ws://localhost:1234', peerAsec);
+    const peerA = createPeer({ dataChannels: ['message'] });
+
     const signalB = await createSignalClient('ws://localhost:1234', peerBsec);
-
-    let first = true;
-    signalA.getReader().pipeTo(new WritableStream({
-      write(event) {
-        console.log('signal A received', event);
-        if (first) {
-          first = false;
-          new ReadableStream({
-            start(controller) {
-              console.log('send from peer A to', signalA.getRemotePubkey());
-              controller.enqueue({ hello: 'universe!' });
-            }
-          }).pipeTo(signalA.getWriter())
-        }
-      }
-    }));
-
     signalB.setRemotePubkey(peerApub);
-    signalB.getReader().pipeTo(new WritableStream({
-      write(event) {
-        console.log('signal B received', event);
+    const peerB = createPeer({ dataChannels: ['message'], initiator: true });
+
+    createConnection(signalA, peerA);
+    createConnection(signalB, peerB);
+
+    peerA.signal().pipeTo(new WritableStream({
+      write(chunk) {
+        console.log('peer A state', chunk);
       }
     }));
 
-    new ReadableStream({
-      start(controller) {
-        controller.enqueue({ hello: 'world' });
+    peerB.signal().pipeTo(new WritableStream({
+      write(chunk) {
+        console.log('peer B state', chunk);
       }
-    }).pipeTo(signalB.getWriter())
-
+    }));
 
     globalThis.addEventListener('alpine:init', () => {
       // TODO: get started!
