@@ -24,7 +24,7 @@
     const relayB = await Relay.connect('ws://localhost:1234');
 
     const subA = relayA.subscribe(
-      [{ kinds: [23456] }],
+      [{ '#p': [peerApub], kinds: [23456] }],
       {
         onevent(event) {
           console.log("we got the event we wanted:", event);
@@ -38,11 +38,12 @@
     const event = finalizeEvent({
       kind: 23456,
       created_at: Math.floor(Date.now() / 1000),
-      tags: [],
+      tags: [['p', peerApub]],
       content: 'hello',
     }, peerBsec);
 
-    relayB.publish(event);
+    await relayB.publish(event);
+    relayB.close();
 
     globalThis.addEventListener('alpine:init', () => {
       // TODO: get started!
