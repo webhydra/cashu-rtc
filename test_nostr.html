@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC/Streaming test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <script type="module">
+    import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
+    import { Relay, finalizeEvent, generateSecretKey, getPublicKey } from "https://esm.sh/nostr-tools@2.8.0";
+
+    const peerAsec = generateSecretKey();
+    const peerApub = getPublicKey(peerAsec);
+
+    const peerBsec = generateSecretKey();
+    const peerBpub = getPublicKey(peerBsec);
+
+    const relayA = await Relay.connect('ws://localhost:1234');
+    const relayB = await Relay.connect('ws://localhost:1234');
+
+    const subA = relayA.subscribe(
+      [{ kinds: [23456] }],
+      {
+        onevent(event) {
+          console.log("we got the event we wanted:", event);
+        },
+        oneose() {
+          subA.close();
+        },
+      }
+    );
+
+    const event = finalizeEvent({
+      kind: 23456,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [],
+      content: 'hello',
+    }, peerBsec);
+
+    relayB.publish(event);
+
+    globalThis.addEventListener('alpine:init', () => {
+      // TODO: get started!
+      console.log('alpine init');
+    });
+
+    Alpine.start();
+  </script>
+</body>
+
+</html>
