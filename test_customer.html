@@ -10,46 +10,30 @@
 
 <body>
 
-  <fieldset x-data="product">
+  <fieldset x-data="transaction">
     <label>
-      Name:<br>
-      <input type="text" x-model="name">
+      Merchant Pubkey:<br>
+      <input type="text" @input="createInitPeer" x-model="remotePubkey">
     </label>
     <br>
 
-    <label>
-      Price:<br>
-      <input type="number" x-model="price">
-    </label>
-    <br>
-
-    <button @click="save">save product</button>
-  </fieldset>
-
-  <div x-data="preview">
-    <template x-for="(product, index) in warez">
+    <template x-for="(product, index) in $store.warez">
       <p>
         <b x-text="product.name"></b><br>
         <span x-text="`${product.price} sats`"></span>
+        <button @click="buy(index)">buy</button>
       </p>
     </template>
-  </div>
+  </fieldset>
 
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
-    import createMerchant from './alpine/merchant.js';
-    
-    function createCustomer() {
-      Alpine.data('customer', () => ({
-
-        
-
-
-      }));
-    }
+    import createCustomer from './alpine/customer.js';
+    import createWallet from './alpine/wallet.js';
 
     globalThis.addEventListener('alpine:init', () => {
-      createMerchant();
+      createCustomer();
+      createWallet();
     });
 
     Alpine.start();

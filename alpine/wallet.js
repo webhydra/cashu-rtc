@@ -5,14 +5,17 @@ import {
   MintQuoteState,
   getEncodedToken,
 } from "https://esm.sh/@cashu/cashu-ts@1.1.0";
+import {
+  generateSecretKey,
+  getPublicKey,
+} from "https://esm.sh/nostr-tools@2.8.0";
 import createPeer from "../external/peer.js";
 import createSignalClient from "../relay.js";
-import { createConnection } from "../pipes.js";
+import { createConnection, createMessageChannel } from "../pipes.js";
 
 export default function createWallet() {
-  const mintUrl = "http://localhost:3338";
-  const mint = new CashuMint(mintUrl);
   const secretKey = generateSecretKey();
+  const mint = new CashuMint("http://localhost:3338");
 
   Alpine.data("transaction", () => ({
     sendToken: "",
@@ -34,14 +37,29 @@ export default function createWallet() {
     async createInitPeer() {
       this.peer = createPeer({ initiator: true, dataChannels: ["message"] });
       const signalClient = await createSignalClient(this.relayUrl, secretKey);
-      signalClient.setRemotePubkey(remotePubkey);
-      createConnection(signalClient, peer);
+      signalClient.setRemotePubkey(this.remotePubkey);
+      createConnection(signalClient, this.peer);
+
+      const { send, listen } = createMessageChannel(this.peer);
+      listen((message) => this.proofs.push(message));
+      this._send = send;
     },
 
     async createPeer() {
       this.peer = createPeer({ dataChannels: ["message"] });
       const signalClient = await createSignalClient(this.relayUrl, secretKey);
-      createConnection(signalClient, peer);
+      createConnection(signalClient, this.peer);
+
+      const { send, listen } = createMessageChannel(this.peer);
+      listen(async ({ type, data }) => {
+        if (type === "token") {
+          const receive = await this.wallet.receive(data);
+          if (receive) Alpine.store("proofs").push(...receive);
+        } else if (type === "product") {
+          Alpine.store("warez").push(data);
+        }
+      });
+      this._send = send;
     },
 
     async send() {
@@ -54,7 +72,7 @@ export default function createWallet() {
         token: [{ mint: mintUrl, proofs: sendProofs }],
       });
       Alpine.store("proofs", changeProofs);
-      console.log("response", changeProofs, sendProofs, encoded);
+      this._send(encoded);
     },
 
     async receive() {

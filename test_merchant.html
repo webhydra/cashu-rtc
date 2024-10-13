@@ -35,6 +35,19 @@
     </template>
   </div>
 
+  <div x-data="transaction" x-init="createPeer">
+    <label>
+      Pubkey:<br>
+      <input readonly @click="$el.select()" type="text" x-model="pubkey">
+    </label>
+
+    <br>
+  </div>
+
+  <div x-data="wallet">
+
+  </div>
+
   <script type="module">
     import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
     import createMerchant from './alpine/merchant.js';
