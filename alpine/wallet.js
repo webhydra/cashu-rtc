@@ -5,10 +5,14 @@ import {
   MintQuoteState,
   getEncodedToken,
 } from "https://esm.sh/@cashu/cashu-ts@1.1.0";
+import createPeer from "../external/peer.js";
+import createSignalClient from "../relay.js";
+import { createConnection } from "../pipes.js";
 
 export default function createWallet() {
   const mintUrl = "http://localhost:3338";
   const mint = new CashuMint(mintUrl);
+  const secretKey = generateSecretKey();
 
   Alpine.data("transaction", () => ({
     sendToken: "",
@@ -17,8 +21,27 @@ export default function createWallet() {
     proofs: [],
     wallet: null,
 
+    peer: null,
+    pubkey: null,
+    remotePubkey: null,
+    relayUrl: "ws://localhost:1234",
+
     async init() {
       this.wallet = new CashuWallet(mint, { unit: "sat" });
+      this.pubkey = getPublicKey(secretKey);
+    },
+
+    async createInitPeer() {
+      this.peer = createPeer({ initiator: true, dataChannels: ["message"] });
+      const signalClient = await createSignalClient(this.relayUrl, secretKey);
+      signalClient.setRemotePubkey(remotePubkey);
+      createConnection(signalClient, peer);
+    },
+
+    async createPeer() {
+      this.peer = createPeer({ dataChannels: ["message"] });
+      const signalClient = await createSignalClient(this.relayUrl, secretKey);
+      createConnection(signalClient, peer);
     },
 
     async send() {

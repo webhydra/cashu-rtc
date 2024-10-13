@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <fieldset x-data="product">
+    <label>
+      Name:<br>
+      <input type="text" x-model="name">
+    </label>
+    <br>
+
+    <label>
+      Price:<br>
+      <input type="number" x-model="price">
+    </label>
+    <br>
+
+    <button @click="save">save product</button>
+  </fieldset>
+
+  <div x-data="preview">
+    <template x-for="(product, index) in warez">
+      <p>
+        <b x-text="product.name"></b><br>
+        <span x-text="`${product.price} sats`"></span>
+      </p>
+    </template>
+  </div>
+
+  <script type="module">
+    import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/module.esm.js';
+    import createMerchant from './alpine/merchant.js';
+    
+    function createCustomer() {
+      Alpine.data('customer', () => ({
+
+        
+
+
+      }));
+    }
+
+    globalThis.addEventListener('alpine:init', () => {
+      createMerchant();
+    });
+
+    Alpine.start();
+  </script>
+</body>
+
+</html>
